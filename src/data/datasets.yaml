@@ -1,0 +1,6 @@
+data_dir: data/semeval2014
+
+datasets:
+  restaurant_reviews:
+    training: ${data_dir}/Restaurants_Train_v2.xml
+    test: ${data_dir}/Laptop_Train_v2.xml

@@ -12,14 +12,19 @@ def main(cfg: DictConfig) -> None:
     # logger.info(OmegaConf.to_yaml(cfg))
     logger.debug(OmegaConf.to_container(cfg))
     train_data_dir = cfg.datasets.restaurant_reviews.training
+
     logger.info(f"Load training data from: {train_data_dir} ...")
     training_reviews = load_reviews(train_data_dir)
     aspect_categories = parse_aspects(training_reviews)
     train_df = parse_reviews(training_reviews, aspect_categories)
     logger.info(f"\n{train_df.head(5)}")
 
+    train_labels = count_labels(train_df, aspect_categories)
+    logger.info(f"Distribution of labels by aspects: \n{train_labels}")
+
 
 def load_reviews(data_dir: str):
+    """Read restaurant reviews from .xml file"""
     dom = minidom.parse(data_dir)
     reviews = dom.getElementsByTagName("sentence")
     logger.info(f"There are {len(reviews)} reviews in the training data.")
@@ -27,6 +32,7 @@ def load_reviews(data_dir: str):
 
 
 def parse_aspects(reviews: List[str]):
+    """Parse aspects from all the reviews"""
     uniq_aspect_categories = []
     for review in reviews:
         aspect_container = review.getElementsByTagName("aspectCategories")
@@ -42,6 +48,7 @@ def parse_aspects(reviews: List[str]):
 
 
 def parse_reviews(reviews: List[str], uniq_aspect_categories: List[str]):
+    """"""
     data = []
     for review in reviews:
         obj = {}
@@ -60,6 +67,19 @@ def parse_reviews(reviews: List[str], uniq_aspect_categories: List[str]):
         data.append(obj)
 
     return pd.DataFrame(data)
+
+
+def count_labels(data: pd.DataFrame, aspect_categories: List[str]):
+    """
+    Check the distribution of labels under different aspects
+
+    """
+
+    label_counts = pd.DataFrame()
+    for aspect in aspect_categories:
+        label_counts[aspect] = data[aspect].value_counts()
+
+    return label_counts
 
 
 if __name__ == "__main__":

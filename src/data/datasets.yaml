@@ -2,5 +2,9 @@ data_dir: data/semeval2014
 
 datasets:
   restaurant_reviews:
-    training: ${data_dir}/Restaurants_Train_v2.xml
-    test: ${data_dir}/Laptop_Train_v2.xml
+    raw:
+      training: ${data_dir}/raw/Restaurants_Train_v2.xml
+      test: ${data_dir}/raw/Restaurants_Test_Gold.xml
+    processed:
+      training: ${data_dir}/processed/restaurants_train_processed.json
+      test: ${data_dir}/processed/restaurants_test_processed.json

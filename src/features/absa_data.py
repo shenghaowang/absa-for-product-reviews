@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-import en_core_web_sm
+import en_core_web_md
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 
 class ABSAVectorizer:
     def __init__(self):
-        self.model = en_core_web_sm.load()
+        self.model = en_core_web_md.load()
 
     def vectorize(self, words):
         """
@@ -50,6 +50,7 @@ class ABSADataset(Dataset):
         return {
             "vectors": sentence_vector,
             "labels": labels,
+            "sentence": sentence,  # for debugging only
         }
 
 
@@ -93,7 +94,7 @@ class ABSADataModule(pl.LightningDataModule):
                 for item in batch
             ]
         )
-        labels = torch.LongTensor(np.array([item["label"] for item in batch]))
+        labels = torch.LongTensor(np.array([item["labels"] for item in batch]))
 
         # Now each pad each vector sequence to the same size
         # This is an implementation 'preference' choice.

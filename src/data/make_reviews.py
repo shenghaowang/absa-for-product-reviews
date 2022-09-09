@@ -5,11 +5,8 @@ import hydra
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import spacy
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
-
-nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
 
 @hydra.main(version_base=None, config_path=".", config_name="datasets")

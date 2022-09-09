@@ -1,18 +1,12 @@
-import json
-import re
 from typing import List
 from xml.dom import minidom
 
 import hydra
-import nltk
 import pandas as pd
-import spacy
+import pyarrow as pa
+import pyarrow.parquet as pq
 from loguru import logger
-from nltk.corpus import stopwords
 from omegaconf import DictConfig, OmegaConf
-
-nltk.download("stopwords")
-nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
 
 @hydra.main(version_base=None, config_path=".", config_name="datasets")
@@ -22,14 +16,6 @@ def main(cfg: DictConfig) -> None:
     raw_data_dir = cfg.datasets.restaurant_reviews.raw
     processed_data_dir = cfg.datasets.restaurant_reviews.processed
 
-    processed_data_cols = [
-        "processed_text",
-        "food",
-        "service",
-        "price",
-        "ambience",
-        "misc",
-    ]
     for ds_type in ["training", "test"]:
         logger.info(f"Load {ds_type} data from: {raw_data_dir[ds_type]} ...")
         raw_reviews = load_reviews(raw_data_dir[ds_type])
@@ -40,17 +26,11 @@ def main(cfg: DictConfig) -> None:
         labels = count_labels(reviews_df, aspect_categories)
         logger.info(f"Distribution of labels by aspects: \n{labels}")
 
-        # Remove stopwords, punctuations and normalise the text
-        reviews_df.rename(columns={"anecdotes/miscellaneous": "misc"}, inplace=True)
-        logger.info("Cleaning reviews ...")
-        reviews_df.loc[:, "processed_text"] = reviews_df["text"].apply(clean_review)
-        reviews_df = reviews_df[processed_data_cols]
-        logger.info(f"\n{reviews_df.head(5)}")
-
         # Export processed reviews
-        review_objs = reviews_df.to_dict("records")
-        with open(processed_data_dir[ds_type], "w") as fout:
-            json.dump(review_objs, fout, indent=4)
+        reviews_df.rename(columns={"anecdotes/miscellaneous": "misc"}, inplace=True)
+        logger.info(f"\n{reviews_df.head(5)}")
+        table = pa.Table.from_pandas(reviews_df, preserve_index=True)
+        pq.write_table(table, processed_data_dir[ds_type])
 
         logger.info(f"Processed reviews written to {processed_data_dir[ds_type]}")
 
@@ -112,28 +92,6 @@ def count_labels(data: pd.DataFrame, aspect_categories: List[str]):
         label_counts[aspect] = data[aspect].value_counts()
 
     return label_counts
-
-
-def clean_review(text: str):
-    """Clean text"""
-
-    def rm_punctuation(text):
-        return re.sub(r"[^\w\s]", "", text)
-
-    def rm_stopwords(text):
-        stop = stopwords.words("english")
-        return " ".join(word for word in text.split() if word not in stop)
-
-    def lemmatize(text):
-        doc = nlp(text)
-        return " ".join([token.lemma_ for token in doc])
-
-    text = text.lower()
-    text = rm_punctuation(text)
-    text = rm_stopwords(text)
-    text = lemmatize(text)
-
-    return text
 
 
 if __name__ == "__main__":

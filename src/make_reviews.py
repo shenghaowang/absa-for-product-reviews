@@ -9,9 +9,8 @@ from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
 
-@hydra.main(version_base=None, config_path=".", config_name="datasets")
+@hydra.main(version_base=None, config_path=".", config_name="config")
 def main(cfg: DictConfig) -> None:
-    # logger.info(OmegaConf.to_yaml(cfg))
     logger.debug(OmegaConf.to_container(cfg))
     raw_data_dir = cfg.datasets.restaurant_reviews.raw
     processed_data_dir = cfg.datasets.restaurant_reviews.processed

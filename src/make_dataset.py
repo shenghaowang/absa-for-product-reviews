@@ -1,24 +1,31 @@
 import hydra
 import torch
-from absa_data import ABSADataModule, ABSAVectorizer
 from loguru import logger
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
+
+from absa_data import ABSADataModule, ABSAVectorizer
 from splitter import ABSADataRenderer, ABSADataSplitter
 
 MAX_EPOCHS = 3
 
 
-class ABSAParams:
-    batch_size: int = 64
-
-
-@hydra.main(version_base=None, config_path="../data", config_name="datasets")
+@hydra.main(version_base=None, config_path=".", config_name="config")
 def main(cfg: DictConfig) -> None:
     processed_data_dir = cfg.datasets.restaurant_reviews.processed
+    aspects = OmegaConf.to_object(cfg.features.aspects)
     reviews_splitter = ABSADataSplitter(
-        data_dir=processed_data_dir["training"], train_size=0.8
+        data_dir=processed_data_dir["training"],
+        train_size=0.8,
+        review_col=cfg.features.review_col,
+        aspect_cols=aspects,
+        label_encoder=cfg.features.label_encoder,
     )
-    reviews_renderer = ABSADataRenderer(data_dir=processed_data_dir["test"])
+    reviews_renderer = ABSADataRenderer(
+        data_dir=processed_data_dir["test"],
+        review_col=cfg.features.review_col,
+        aspect_cols=aspects,
+        label_encoder=cfg.features.label_encoder,
+    )
 
     # Prepare training and validation data
     train_data, valid_data = reviews_splitter.run()
@@ -36,7 +43,8 @@ def main(cfg: DictConfig) -> None:
     device = torch.device("cpu")
     data_module = ABSADataModule(
         vectorizer=ABSAVectorizer(),
-        params=ABSAParams,
+        batch_size=cfg.model.batch_size,
+        max_seq_len=cfg.features.max_seq_len,
         train_data=train_data,
         valid_data=valid_data,
         test_data=test_data,

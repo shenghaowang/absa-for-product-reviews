@@ -1,9 +1,12 @@
 from typing import List
 
+import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import torchmetrics
+
+from features.feature_cfg import LABEL_ENCODER
 
 
 class ABSAClassifier(pl.LightningModule):
@@ -11,50 +14,62 @@ class ABSAClassifier(pl.LightningModule):
         super().__init__()
         self.model = model
         self.params = params
-        self.f1 = torchmetrics.F1Score()
+        self.acc = torchmetrics.Accuracy()
 
     def forward(self, x, x_len):
         return self.model(x, x_len)
 
-    def training_step(self, batch, batch_idx):
+    def _calculate_loss(self, batch, mode="train"):
+        # Fetch data and transform labels to one-hot vectors
         x = batch["vectors"]
         x_len = batch["vectors_length"]
-        y = batch["labels"]
+        y = batch["labels"]  # One-hot encoding is not required
+
+        # Perform prediction and calculate loss and F1 score
         y_hat = self(x, x_len)
-        loss = F.cross_entropy(y_hat, y, reduction="mean")
-        self.log_dict({"train_loss": loss}, prog_bar=True)
+        agg_loss = 0
+        total_examples = 0
+        correct_examples = 0
+        for idx, _ in enumerate(self.params.aspects):
+            prob_start_idx = self.params.num_aspects * idx
+            prob_end_idx = self.params.num_aspects * (idx + 1)
+
+            # Skip data points with the "absent" label
+            valid_label_ids = np.where(y[:, idx] != LABEL_ENCODER["absent"])
+            loss = F.cross_entropy(
+                y_hat[valid_label_ids, prob_start_idx:prob_end_idx],
+                y[valid_label_ids, idx],
+                reduction="mean",
+            )
+            agg_loss += loss
+
+            predictions = torch.argmax(
+                y_hat[valid_label_ids, prob_start_idx:prob_end_idx], dim=1
+            )
+            correct_examples += torch.sum(predictions == y[valid_label_ids, idx])
+            total_examples += len(valid_label_ids)
+            acc = correct_examples / total_examples
+
+        # Logging
+        self.log_dict(
+            {
+                f"{mode}_loss": agg_loss,
+                f"{mode}_acc": acc,
+            },
+            prog_bar=True,
+        )
+        return agg_loss
+
+    def training_step(self, batch, batch_idx):
+        loss = self._calculate_loss(batch, "train")
         return loss
 
     def validation_step(self, batch, batch_nb):
-        x = batch["vectors"]
-        x_len = batch["vectors_length"]
-        y = batch["labels"]
-        y_hat = self(x, x_len)
-        loss = F.cross_entropy(y_hat, y, reduction="mean")
-        predictions = torch.argmax(y_hat, dim=1)
-        self.log_dict(
-            {
-                "val_loss": loss,
-                "val_f1": self.f1(predictions, y),
-            },
-            prog_bar=True,
-        )
+        loss = self._calculate_loss(batch, "val")
         return loss
 
     def test_step(self, batch, batch_nb):
-        x = batch["vectors"]
-        x_len = batch["vectors_length"]
-        y = batch["labels"]
-        y_hat = self(x, x_len)
-        loss = F.cross_entropy(y_hat, y, reduction="mean")
-        predictions = torch.argmax(y_hat, dim=1)
-        self.log_dict(
-            {
-                "test_loss": loss,
-                "test_f1": self.f1(predictions, y),
-            },
-            prog_bar=True,
-        )
+        loss = self._calculate_loss(batch, "test")
         return loss
 
     def predict_step(self, batch, batch_idx):

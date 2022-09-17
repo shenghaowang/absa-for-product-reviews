@@ -1,19 +1,28 @@
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import torchmetrics
-
-from features.feature_cfg import LABEL_ENCODER
+from loguru import logger
+from omegaconf import DictConfig
 
 
 class ABSAClassifier(pl.LightningModule):
-    def __init__(self, model, params):
+    def __init__(
+        self,
+        model,
+        aspects: List[str],
+        label_encoder: Dict[str, int],
+        learning_rate: float,
+    ):
         super().__init__()
         self.model = model
-        self.params = params
+        self.aspects = aspects
+        self.label_encoder = label_encoder
+        self.num_aspects = len(self.aspects)
+        self.learning_rate = learning_rate
         self.acc = torchmetrics.Accuracy()
 
     def forward(self, x, x_len):
@@ -27,15 +36,17 @@ class ABSAClassifier(pl.LightningModule):
 
         # Perform prediction and calculate loss and F1 score
         y_hat = self(x, x_len)
+        logger.debug(f"y: {y.size()}")
+        logger.debug(f"y_hat: {y_hat.size()}")
         agg_loss = 0
         total_examples = 0
         correct_examples = 0
-        for idx, _ in enumerate(self.params.aspects):
-            prob_start_idx = self.params.num_aspects * idx
-            prob_end_idx = self.params.num_aspects * (idx + 1)
+        for idx, _ in enumerate(self.aspects):
+            prob_start_idx = self.num_aspects * idx
+            prob_end_idx = self.num_aspects * (idx + 1)
 
             # Skip data points with the "absent" label
-            valid_label_ids = np.where(y[:, idx] != LABEL_ENCODER["absent"])
+            valid_label_ids = np.where(y[:, idx] != self.label_encoder["absent"])
             loss = F.cross_entropy(
                 y_hat[valid_label_ids, prob_start_idx:prob_end_idx],
                 y[valid_label_ids, idx],
@@ -85,7 +96,7 @@ class ABSAClassifier(pl.LightningModule):
         }
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.params.learning_rate)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
 
 
@@ -93,16 +104,15 @@ class MultiTaskClassificationModel(torch.nn.Module):
     def __init__(
         self,
         aspects: List[str],
-        word_vec_dimension: int,
-        # num_aspects: int,
         num_classes: int,
-        params,
+        hyparams: DictConfig,
     ):
         super().__init__()
+        self.aspects = aspects
         self.backbone = torch.nn.LSTM(
-            input_size=word_vec_dimension,
-            hidden_size=params.hidden_dim,
-            num_layers=params.num_layers,
+            input_size=hyparams.word_vec_dim,
+            hidden_size=hyparams.hidden_dim,
+            num_layers=hyparams.num_layers,
             batch_first=True,
             bidirectional=True,
         )
@@ -111,9 +121,9 @@ class MultiTaskClassificationModel(torch.nn.Module):
         for aspect in aspects:
             module_name = f"h_{aspect}"
             module = torch.nn.Sequential(
-                torch.nn.Linear(params.hidden_dim, params.hidden_dim / 2),
-                torch.nn.Dropout(params.dropout),
-                torch.nn.Linear(params.hidden_dim / 2, num_classes),
+                torch.nn.Linear(hyparams.hidden_dim, int(hyparams.hidden_dim / 2)),
+                torch.nn.Dropout(hyparams.dropout),
+                torch.nn.Linear(int(hyparams.hidden_dim / 2), num_classes),
             )
             setattr(self, module_name, module)
 

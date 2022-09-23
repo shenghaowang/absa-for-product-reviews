@@ -125,7 +125,7 @@ class ABSADataModule(pl.LightningDataModule):
 
     def test_dataloader(self):
         return DataLoader(
-            self.cabsa_test,
+            self.absa_test,
             batch_size=self.batch_size,
             collate_fn=self.collate_fn,
         )

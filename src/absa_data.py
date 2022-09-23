@@ -4,7 +4,6 @@ import en_core_web_md
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from feature_cfg import MAX_SEQ_LEN
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 
@@ -60,13 +59,15 @@ class ABSADataModule(pl.LightningDataModule):
     def __init__(
         self,
         vectorizer,
-        params,
+        batch_size,
+        max_seq_len,
         train_data: List[Tuple],
         valid_data: List[Tuple],
         test_data: List[Tuple],
     ):
         super().__init__()
-        self.params = params
+        self.batch_size = batch_size
+        self.max_seq_len = max_seq_len
         self.absa_train = ABSADataset(train_data, vectorizer)
         self.absa_valid = ABSADataset(valid_data, vectorizer)
         self.absa_test = ABSADataset(test_data, vectorizer)
@@ -86,10 +87,10 @@ class ABSADataModule(pl.LightningDataModule):
         word_vector, word_vector_length = zip(
             *[
                 (
-                    torch.Tensor(np.array(item["vectors"][:MAX_SEQ_LEN])),
+                    torch.Tensor(np.array(item["vectors"][: self.max_seq_len])),
                     len(item["vectors"])
-                    if len(item["vectors"]) < MAX_SEQ_LEN
-                    else MAX_SEQ_LEN,
+                    if len(item["vectors"]) < self.max_seq_len
+                    else self.max_seq_len,
                 )
                 for item in batch
             ]
@@ -111,20 +112,20 @@ class ABSADataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return DataLoader(
             self.absa_train,
-            batch_size=self.params.batch_size,
+            batch_size=self.batch_size,
             collate_fn=self.collate_fn,
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.absa_valid,
-            batch_size=self.params.batch_size,
+            batch_size=self.batch_size,
             collate_fn=self.collate_fn,
         )
 
     def test_dataloader(self):
         return DataLoader(
-            self.cabsa_test,
-            batch_size=self.params.batch_size,
+            self.absa_test,
+            batch_size=self.batch_size,
             collate_fn=self.collate_fn,
         )

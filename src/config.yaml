@@ -1,0 +1,39 @@
+data_dir: data/semeval2014
+
+datasets:
+  restaurant_reviews:
+    raw:
+      training: ${data_dir}/raw/Restaurants_Train_v2.xml
+      test: ${data_dir}/raw/Restaurants_Test_Gold.xml
+    processed:
+      training: ${data_dir}/processed/restaurants_train_processed.parquet
+      test: ${data_dir}/processed/restaurants_test_processed.parquet
+
+features:
+  review_col: text
+  aspects:
+    - food
+    - service
+    - price
+    - ambience
+    - misc
+  num_aspects: 5
+  num_classes: 5
+  label_encoder:
+    absent: 0
+    positive: 1
+    neutral: 2
+    negative: 3
+    conflict: 4
+  max_seq_len: 60
+
+model:
+  batch_size: 32
+  learning_rate: 0.001
+  max_epochs: 5
+  # num_tags: 5
+  hidden_dim: 128
+  dropout: 0.2
+  word_vec_dim: 300
+  num_layers: 2
+  bidirectional: True

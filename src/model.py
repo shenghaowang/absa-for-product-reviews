@@ -5,7 +5,8 @@ import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 import torchmetrics
-from loguru import logger
+
+# from loguru import logger
 from omegaconf import DictConfig
 
 
@@ -36,8 +37,8 @@ class ABSAClassifier(pl.LightningModule):
 
         # Perform prediction and calculate loss and F1 score
         y_hat = self(x, x_len)
-        logger.debug(f"y: {y.size()}")
-        logger.debug(f"y_hat: {y_hat.size()}")
+        # logger.debug(f"y: {y.size()}")
+        # logger.debug(f"y_hat: {y_hat.size()}")
         agg_loss = 0
         total_examples = 0
         correct_examples = 0
@@ -46,13 +47,19 @@ class ABSAClassifier(pl.LightningModule):
             prob_end_idx = self.num_aspects * (idx + 1)
 
             # Skip data points with the "absent" label
-            valid_label_ids = np.where(y[:, idx] != self.label_encoder["absent"])
-            loss = F.cross_entropy(
-                y_hat[valid_label_ids, prob_start_idx:prob_end_idx],
-                y[valid_label_ids, idx],
-                reduction="mean",
-            )
-            agg_loss += loss
+            valid_label_ids = np.where(y[:, idx] != self.label_encoder["absent"])[0]
+            # logger.debug(f"valid_label_ids: {len(valid_label_ids)}")
+            # logger.debug(f"valid_label_ids: {valid_label_ids}")
+            # logger.debug(f"prob_start_idx: {prob_start_idx}")
+            # logger.debug(f"prob_end_idx: {prob_end_idx}")
+
+            if len(valid_label_ids) > 0:
+                loss = F.cross_entropy(
+                    y_hat[valid_label_ids, prob_start_idx:prob_end_idx],
+                    y[valid_label_ids, idx],
+                    reduction="mean",
+                )
+                agg_loss += loss
 
             predictions = torch.argmax(
                 y_hat[valid_label_ids, prob_start_idx:prob_end_idx], dim=1
@@ -87,10 +94,18 @@ class ABSAClassifier(pl.LightningModule):
         x = batch["vectors"]
         x_len = batch["vectors_length"]
         y_hat = self.model(x, x_len)
-        predictions = torch.argmax(y_hat, dim=1)
+        agg_preds = []
+        for idx, _ in enumerate(self.aspects):
+            prob_start_idx = self.num_aspects * idx
+            prob_end_idx = self.num_aspects * (idx + 1)
+            aspect_pred = torch.argmax(
+                y_hat[:, prob_start_idx:prob_end_idx], dim=1
+            ).view(len(x), 1)
+            agg_preds.append(aspect_pred)
+
         return {
             "logits": y_hat,
-            "predictions": predictions,
+            "predictions": torch.cat(agg_preds, dim=1),
             "labels": batch["labels"],
             "sentences": batch["sentences"],
         }
@@ -98,6 +113,10 @@ class ABSAClassifier(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
+
+    def on_epoch_start(self):
+        """Create a new progress bar for each epoch"""
+        print("\n")
 
 
 class MultiTaskClassificationModel(torch.nn.Module):
@@ -117,11 +136,14 @@ class MultiTaskClassificationModel(torch.nn.Module):
             bidirectional=True,
         )
         # Define task specific layers
+        num_directions = 2
         self.heads = torch.nn.ModuleList([])
         for aspect in aspects:
             module_name = f"h_{aspect}"
             module = torch.nn.Sequential(
-                torch.nn.Linear(hyparams.hidden_dim, int(hyparams.hidden_dim / 2)),
+                torch.nn.Linear(
+                    hyparams.hidden_dim * num_directions, int(hyparams.hidden_dim / 2)
+                ),
                 torch.nn.Dropout(hyparams.dropout),
                 torch.nn.Linear(int(hyparams.hidden_dim / 2), num_classes),
             )
@@ -139,5 +161,10 @@ class MultiTaskClassificationModel(torch.nn.Module):
             batch, batch_len, batch_first=True, enforce_sorted=True
         )
         lstm_output, (h, c) = self.backbone(packed_input)
-        hs = [getattr(self, f"h_{aspect}")(h) for aspect in self.aspects]
+        output_unpacked, _ = torch.nn.utils.rnn.pad_packed_sequence(
+            lstm_output, batch_first=True
+        )
+        out = output_unpacked[:, -1, :]
+        # logger.debug(f"output of backbone: {out.size()}")
+        hs = [getattr(self, f"h_{aspect}")(out) for aspect in self.aspects]
         return torch.cat(hs, axis=1)

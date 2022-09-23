@@ -9,6 +9,8 @@ from absa_data import ABSADataModule, ABSAVectorizer
 from model import ABSAClassifier, MultiTaskClassificationModel
 from splitter import ABSADataRenderer, ABSADataSplitter
 
+# from torchsummary import summary
+
 
 @hydra.main(version_base=None, config_path=".", config_name="config")
 def main(cfg: DictConfig):
@@ -36,6 +38,7 @@ def main(cfg: DictConfig):
     model = MultiTaskClassificationModel(
         aspects=aspects, num_classes=cfg.features.num_classes, hyparams=cfg.model
     )
+    # logger.debug(f"Model architecture:\n{summary(model, (32, 30, 300))}")
 
     trainer(
         model=model,
@@ -90,10 +93,10 @@ def trainer(
     output = trainer.predict(model, data_module.test_dataloader())
 
     for i in range(2):
-        logger.info("-----------")
-        logger.info("Sentence: ", output[1]["sentences"][i])
-        logger.info("Predicted Sentiment: ", output[1]["predictions"][i].numpy())
-        logger.infont("Actual Label: ", output[1]["labels"][i].numpy())
+        logger.info("====================")
+        logger.info(f"Sentence: {output[1]['sentences'][i]}")
+        logger.info(f"Predicted Sentiment: {output[1]['predictions'][i].numpy()}")
+        logger.info(f"Actual Label: {output[1]['labels'][i].numpy()}")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 import hydra
 import pytorch_lightning as pl
+import torch
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
@@ -16,6 +17,8 @@ from splitter import ABSADataRenderer, ABSADataSplitter
 def main(cfg: DictConfig):
     processed_data_dir = cfg.datasets.restaurant_reviews.processed
     aspects = OmegaConf.to_object(cfg.features.aspects)
+
+    torch.manual_seed(seed=42)
 
     # Initialise datasets
     reviews_splitter = ABSADataSplitter(

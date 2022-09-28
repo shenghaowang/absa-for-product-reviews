@@ -1,6 +1,7 @@
 data_dir: data/semeval2014
 
 datasets:
+  clean: False
   restaurant_reviews:
     raw:
       training: ${data_dir}/raw/Restaurants_Train_v2.xml
@@ -30,8 +31,7 @@ features:
 model:
   batch_size: 32
   learning_rate: 0.001
-  max_epochs: 5
-  # num_tags: 5
+  max_epochs: 3
   hidden_dim: 128
   dropout: 0.2
   word_vec_dim: 300

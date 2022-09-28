@@ -1,6 +1,7 @@
 from typing import List
 from xml.dom import minidom
 
+import cleantext
 import hydra
 import pandas as pd
 import pyarrow as pa
@@ -20,6 +21,15 @@ def main(cfg: DictConfig) -> None:
         raw_reviews = load_reviews(raw_data_dir[ds_type])
         aspect_categories = parse_aspects(raw_reviews)
         reviews_df = parse_reviews(raw_reviews, aspect_categories)
+
+        # Clean up reviews if requested
+        if cfg.datasets.clean:
+            reviews_df["text"] = reviews_df["text"].apply(cleantext.clean)
+
+            # Remove which are blank after cleaning
+            reviews_df = reviews_df[
+                reviews_df["text"].apply(lambda x: len(x.split(" ")) > 0)
+            ]
 
         # Check distribution of labels by different aspects
         labels = count_labels(reviews_df, aspect_categories)

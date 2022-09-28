@@ -9,3 +9,4 @@ spacy==3.4.1
 scikit-learn==1.0.2
 scikit-multilearn==0.2.0
 pyarrow==9.0.0
+cleantext==1.1.4

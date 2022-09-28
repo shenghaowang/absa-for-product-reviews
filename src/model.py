@@ -9,6 +9,8 @@ import torchmetrics
 # from loguru import logger
 from omegaconf import DictConfig
 
+from attention import MultiHeadAttention
+
 
 class ABSAClassifier(pl.LightningModule):
     def __init__(
@@ -37,8 +39,6 @@ class ABSAClassifier(pl.LightningModule):
 
         # Perform prediction and calculate loss and F1 score
         y_hat = self(x, x_len)
-        # logger.debug(f"y: {y.size()}")
-        # logger.debug(f"y_hat: {y_hat.size()}")
         agg_loss = 0
         total_examples = 0
         correct_examples = 0
@@ -48,16 +48,12 @@ class ABSAClassifier(pl.LightningModule):
 
             # Skip data points with the "absent" label
             valid_label_ids = np.where(y[:, idx] != self.label_encoder["absent"])[0]
-            # logger.debug(f"valid_label_ids: {len(valid_label_ids)}")
-            # logger.debug(f"valid_label_ids: {valid_label_ids}")
-            # logger.debug(f"prob_start_idx: {prob_start_idx}")
-            # logger.debug(f"prob_end_idx: {prob_end_idx}")
-
             if len(valid_label_ids) > 0:
                 loss = F.cross_entropy(
                     y_hat[valid_label_ids, prob_start_idx:prob_end_idx],
                     y[valid_label_ids, idx],
                     reduction="mean",
+                    weight=torch.tensor([0.3, 0.5, 1, 1, 1]),
                 )
                 agg_loss += loss
 
@@ -134,13 +130,18 @@ class MultiTaskClassificationModel(torch.nn.Module):
             num_layers=hyparams.num_layers,
             batch_first=True,
             bidirectional=True,
-        )
+        )  # Output dimension = (batch_size, seq_length, num_directions * hidden_dim)
+
         # Define task specific layers
         num_directions = 2
         self.heads = torch.nn.ModuleList([])
         for aspect in aspects:
             module_name = f"h_{aspect}"
             module = torch.nn.Sequential(
+                MultiHeadAttention(
+                    embed_dim=hyparams.hidden_dim * num_directions,
+                    num_heads=2,
+                ),
                 torch.nn.Linear(
                     hyparams.hidden_dim * num_directions, int(hyparams.hidden_dim / 2)
                 ),
@@ -164,7 +165,5 @@ class MultiTaskClassificationModel(torch.nn.Module):
         output_unpacked, _ = torch.nn.utils.rnn.pad_packed_sequence(
             lstm_output, batch_first=True
         )
-        out = output_unpacked[:, -1, :]
-        # logger.debug(f"output of backbone: {out.size()}")
-        hs = [getattr(self, f"h_{aspect}")(out) for aspect in self.aspects]
+        hs = [getattr(self, f"h_{aspect}")(output_unpacked) for aspect in self.aspects]
         return torch.cat(hs, axis=1)

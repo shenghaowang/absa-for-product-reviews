@@ -10,8 +10,6 @@ from absa_data import ABSADataModule, ABSAVectorizer
 from model import ABSAClassifier, MultiTaskClassificationModel
 from splitter import ABSADataRenderer, ABSADataSplitter
 
-# from torchsummary import summary
-
 
 @hydra.main(version_base=None, config_path=".", config_name="config")
 def main(cfg: DictConfig):
@@ -41,8 +39,6 @@ def main(cfg: DictConfig):
     model = MultiTaskClassificationModel(
         aspects=aspects, num_classes=cfg.features.num_classes, hyparams=cfg.model
     )
-    # logger.debug(f"Model architecture:\n{summary(model, (32, 30, 300))}")
-
     trainer(
         model=model,
         feature_params=cfg.features,

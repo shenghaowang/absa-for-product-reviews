@@ -76,6 +76,7 @@ def trainer(
         aspects=feature_params.aspects,
         label_encoder=feature_params.label_encoder,
         learning_rate=hyparams.learning_rate,
+        class_weights=hyparams.class_weights,
     )
 
     # Train and validate the model

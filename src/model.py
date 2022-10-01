@@ -19,6 +19,7 @@ class ABSAClassifier(pl.LightningModule):
         aspects: List[str],
         label_encoder: Dict[str, int],
         learning_rate: float,
+        class_weights: List[float],
     ):
         super().__init__()
         self.model = model
@@ -26,6 +27,7 @@ class ABSAClassifier(pl.LightningModule):
         self.label_encoder = label_encoder
         self.num_aspects = len(self.aspects)
         self.learning_rate = learning_rate
+        self.class_weights = torch.tensor(class_weights)
         self.acc = torchmetrics.Accuracy()
 
     def forward(self, x, x_len):
@@ -53,7 +55,7 @@ class ABSAClassifier(pl.LightningModule):
                     y_hat[valid_label_ids, prob_start_idx:prob_end_idx],
                     y[valid_label_ids, idx],
                     reduction="mean",
-                    weight=torch.tensor([0.3, 0.5, 1, 1, 1]),
+                    weight=self.class_weights,
                 )
                 agg_loss += loss
 

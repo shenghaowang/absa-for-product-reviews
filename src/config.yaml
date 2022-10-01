@@ -37,3 +37,4 @@ model:
   word_vec_dim: 300
   num_layers: 2
   bidirectional: True
+  num_heads: 2

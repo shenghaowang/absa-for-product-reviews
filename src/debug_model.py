@@ -50,9 +50,10 @@ def main(cfg: DictConfig) -> None:
 
     # Test the LSTM layer
     hyparams = cfg.model
+    seq_len = local_vectors.size()[1]
     packed_input = torch.nn.utils.rnn.pack_padded_sequence(
         input=local_vectors,
-        lengths=torch.tensor([33] * hyparams.batch_size),
+        lengths=torch.tensor([seq_len] * hyparams.batch_size),
         batch_first=True,
         enforce_sorted=True,
     )

@@ -10,13 +10,13 @@ from torch.utils.data import DataLoader, Dataset
 
 class ABSAVectorizer:
     def __init__(self):
+        """Convert review sentences to pre-trained word vectors"""
         self.model = en_core_web_md.load()
 
     def vectorize(self, words):
         """
         Given a sentence, tokenize it and returns a pre-trained word vector
         for each token.
-        Note that the vectorizer needs to be compatible with the tokenizer.
         """
 
         sentence_vector = []

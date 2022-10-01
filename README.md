@@ -1,6 +1,7 @@
-# Aspect Based Sentiment Analysis for Restaurant Reviews
+# Aspect Based Sentiment Analysis (ABSA) for Restaurant Reviews
 
-An exmaple of aspect based sentiment analysis with multi-task learning.
+This is a proof-of-concept implementation of aspect based sentiment analysis using multi-task learning. The model architecture was taken from Eram Munawwar's [blog post](https://medium.com/analytics-vidhya/aspect-based-sentiment-analysis-5a78d4cba1b1).
+
 
 ## Installation
 Python >3.8 is required.
@@ -17,7 +18,7 @@ python -m spacy download en_core_web_md
 
 `python src/train.py` will train a multi-task neural network model for sentiment analysis.
 
-`python src/debug_dataset.py` can be used for debugging the process of creating datasets.
+`python src/debug_dataset.py` can be used for debugging the process of datasets creation.
 
 `python src/debug_model.py` can be used for debugging the network architecture.
 

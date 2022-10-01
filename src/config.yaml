@@ -1,7 +1,7 @@
 data_dir: data/semeval2014
 
 datasets:
-  clean: False
+  clean: True
   restaurant_reviews:
     raw:
       training: ${data_dir}/raw/Restaurants_Train_v2.xml

@@ -24,12 +24,20 @@ def main(cfg: DictConfig) -> None:
 
         # Clean up reviews if requested
         if cfg.datasets.clean:
-            reviews_df["text"] = reviews_df["text"].apply(cleantext.clean)
+            reviews_df["text"] = reviews_df["text"].apply(
+                cleantext.clean,
+                extra_spaces=True,
+                lowercase=True,
+                stopwords=True,
+                numbers=True,
+                punct=True,
+            )
 
             # Remove which are blank after cleaning
             reviews_df = reviews_df[
-                reviews_df["text"].apply(lambda x: len(x.split(" ")) > 0)
+                reviews_df["text"].apply(lambda x: len(x.strip()) > 0)
             ]
+            logger.info(f"{len(reviews_df)} reviews remain after text cleaning.")
 
         # Check distribution of labels by different aspects
         labels = count_labels(reviews_df, aspect_categories)

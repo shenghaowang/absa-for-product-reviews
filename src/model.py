@@ -140,7 +140,7 @@ class MultiTaskClassificationModel(torch.nn.Module):
             module = torch.nn.Sequential(
                 MultiHeadAttention(
                     embed_dim=hyparams.hidden_dim * num_directions,
-                    num_heads=2,
+                    num_heads=hyparams.num_heads,
                 ),
                 torch.nn.Linear(
                     hyparams.hidden_dim * num_directions, int(hyparams.hidden_dim / 2)

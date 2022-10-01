@@ -6,7 +6,7 @@ from omegaconf import DictConfig, OmegaConf
 from absa_data import ABSADataModule, ABSAVectorizer
 from splitter import ABSADataRenderer, ABSADataSplitter
 
-MAX_EPOCHS = 3
+MAX_EPOCHS = 1
 
 
 @hydra.main(version_base=None, config_path=".", config_name="config")

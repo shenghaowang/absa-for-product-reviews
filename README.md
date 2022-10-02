@@ -2,6 +2,8 @@
 
 This is a proof-of-concept implementation of aspect based sentiment analysis using multi-task learning. The model architecture was taken from Eram Munawwar's [blog post](https://medium.com/analytics-vidhya/aspect-based-sentiment-analysis-5a78d4cba1b1).
 
+![ABSA network diagram](absa-network.png)
+
 The prototype neural network model was trained on ~3000 restaurant reviews with polarity labels over 5 different aspects. The model achieved a test accuracy of 0.7442 compared against the majority baseline of 0.6409.
 
 

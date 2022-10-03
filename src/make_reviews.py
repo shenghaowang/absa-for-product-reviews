@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 from xml.dom import minidom
 
@@ -47,6 +48,9 @@ def main(cfg: DictConfig) -> None:
         reviews_df.rename(columns={"anecdotes/miscellaneous": "misc"}, inplace=True)
         logger.info(f"\n{reviews_df.head(5)}")
         table = pa.Table.from_pandas(reviews_df, preserve_index=True)
+
+        output_dir = Path(processed_data_dir[ds_type]).parent
+        output_dir.mkdir(parents=True, exist_ok=True)
         pq.write_table(table, processed_data_dir[ds_type])
 
         logger.info(f"Processed reviews written to {processed_data_dir[ds_type]}")

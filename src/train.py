@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Tuple
 
 import hydra
@@ -46,6 +47,7 @@ def main(cfg: DictConfig):
         train_data=train_data,
         valid_data=valid_data,
         test_data=test_data,
+        model_file=cfg.model_file,
     )
 
 
@@ -56,6 +58,7 @@ def trainer(
     train_data: List[Tuple],
     valid_data: List[Tuple],
     test_data: List[Tuple],
+    model_file: str,
 ) -> None:
     # Create a pytorch trainer
     trainer = pl.Trainer(max_epochs=hyparams.max_epochs, check_val_every_n_epoch=1)
@@ -97,6 +100,27 @@ def trainer(
         logger.info(f"Sentence: {output[1]['sentences'][i]}")
         logger.info(f"Predicted Sentiment: {output[1]['predictions'][i].numpy()}")
         logger.info(f"Actual Label: {output[1]['labels'][i].numpy()}")
+
+    # Export fitted model
+    model_dir = Path(model_file).parent
+    model_dir.mkdir(parents=True, exist_ok=True)
+
+    # local_batch = next(iter(data_module.test_dataloader()))
+    # input_sample = local_batch["vectors"], local_batch["vectors_length"]
+    # device = torch.device("cpu")
+    # model.to_onnx(
+    #     model_file,
+    #     input_sample,
+    #     export_params=True,
+    #     input_names=['input'],
+    #     output_names=['output'],
+    #     dynamic_axes={
+    #         'input': {0 : 'batch_size'},
+    #         'output': {0 : 'batch_size'}
+    #     }
+    # )
+    torch.save(model.state_dict(), model_file)
+    logger.info(f"ABSA model exported to {model_file}.")
 
 
 if __name__ == "__main__":

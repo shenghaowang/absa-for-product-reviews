@@ -89,6 +89,23 @@ def main(cfg: DictConfig) -> None:
 def get_majority_prediction(
     y_true: np.array, num_aspects: int, absent: int = 0
 ) -> np.array:
+    """Create baseline predictions based on majority voting
+
+    Parameters
+    ----------
+    y_true : np.array
+        groudtruth label across aspects
+    num_aspects : int
+        number of aspects
+    absent : int, optional
+        encoded label to be exempted from the accuracy calculation,
+        by default 0
+
+    Returns
+    -------
+    np.array
+        predicted labels based on majority voting
+    """
     y_majority_pred = []
     for idx in range(num_aspects):
         label_counts = np.bincount(y_true[:, idx])
@@ -107,6 +124,20 @@ def get_majority_prediction(
 def compute_accuracy(
     y_true: np.array, y_pred: np.array, aspects: List[str], absent: int = 0
 ) -> None:
+    """Compute per aspect and overall accuracy
+
+    Parameters
+    ----------
+    y_true : np.array
+        groundtruth labels across aspects
+    y_pred : np.array
+        predicted labels across aspects
+    aspects : List[str]
+        names of the aspects
+    absent : int, optional
+        encoded label to be exempted from the accuracy calculation,
+        by default 0
+    """
 
     assert (
         y_true.shape == y_pred.shape

@@ -60,6 +60,8 @@ python -m spacy download en_core_web_md
 
 `python src/train.py` will train a multi-task neural network model for sentiment analysis.
 
+`python src/evaluate.py` will make prediction for the test data and compute the accuracy for different aspects.
+
 `python src/debug_dataset.py` can be used for debugging the process of datasets creation.
 
 `python src/debug_model.py` can be used for debugging the network architecture.

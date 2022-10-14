@@ -5,6 +5,12 @@ data/
 # Hydra log
 outputs/
 
+# Pytorch lightning log
+lightning_logs/
+
+# Exported model
+model/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

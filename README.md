@@ -4,7 +4,45 @@ This is a proof-of-concept implementation of aspect based sentiment analysis usi
 
 ![ABSA network diagram](absa-network.png)
 
-The prototype neural network model was trained on ~3000 restaurant reviews with polarity labels over 5 different aspects. The model achieved a test accuracy of 0.7442 compared against the majority baseline of 0.6409.
+The prototype neural network model was trained on ~3000 restaurant reviews with polarity labels over 5 different aspects. The model achieved a test accuracy of 0.7434 compared against the majority baseline of 0.6410. The accuracy of different aspects is reported as follows.
+
+<table>
+  <tr>
+    <th>Aspect</th>
+    <th>Baseline accuracy</th>
+    <th>ABSA accuracy</th>
+  </tr>
+  <tr>
+    <td>food</td>
+    <td>0.7225</td>
+    <td>0.7823</td>
+  </tr>
+  <tr>
+    <td>service</td>
+    <td>0.5872</td>
+    <td>0.8430</td>
+  </tr>
+  <tr>
+    <td>price</td>
+    <td>0.6145</td>
+    <td>0.7590</td>
+  </tr>
+  <tr>
+    <td>ambience</td>
+    <td>0.6441</td>
+    <td>0.7542</td>
+  </tr>
+  <tr>
+    <td>anecdotes/miscellaneous</td>
+    <td>0.5427</td>
+    <td>0.5897</td>
+  </tr>
+  <tr>
+    <td>Overall</td>
+    <td>0.6410</td>
+    <td>0.7434</td>
+  </tr>
+</table>
 
 
 ## Installation
@@ -21,6 +59,8 @@ python -m spacy download en_core_web_md
 `python src/make_reviews.py` will process the restaurant review data and export it into parquet format.
 
 `python src/train.py` will train a multi-task neural network model for sentiment analysis.
+
+`python src/evaluate.py` will make prediction for the test data and compute the accuracy for different aspects.
 
 `python src/debug_dataset.py` can be used for debugging the process of datasets creation.
 

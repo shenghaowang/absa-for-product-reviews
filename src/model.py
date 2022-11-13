@@ -39,7 +39,7 @@ class ABSAClassifier(pl.LightningModule):
         x_len = batch["vectors_length"]
         y = batch["labels"]  # One-hot encoding is not required
 
-        # Perform prediction and calculate loss and F1 score
+        # Perform prediction and calculate loss and accuracy
         y_hat = self(x, x_len)
         agg_loss = 0
         total_examples = 0

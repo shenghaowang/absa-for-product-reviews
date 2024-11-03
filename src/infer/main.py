@@ -43,7 +43,7 @@ def main(cfg: DictConfig) -> None:
     predictor = Predictor()
 
     y_majority_pred = predictor.get_majority_prediction(
-        y_true, cfg.features.num_aspects
+        y_true=y_true, num_aspects=cfg.features.num_aspects
     )
     logger.info("Compute accuracy for the majority predictions:")
     predictor.compute_accuracy(
@@ -59,6 +59,7 @@ def main(cfg: DictConfig) -> None:
             aspects=aspects, num_classes=cfg.features.num_classes, hyparams=cfg.model
         ),
         aspects=aspects,
+        num_classes=cfg.features.num_classes,
         label_encoder=cfg.features.label_encoder,
         learning_rate=cfg.model.learning_rate,
         class_weights=cfg.model.class_weights,

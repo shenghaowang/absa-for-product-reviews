@@ -18,7 +18,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "apt-get update && pre-commit install"
+	"postCreateCommand": "apt-get update && git config --global --add safe.directory /workspaces/absa-for-restaurant-reviews && pre-commit install"
 
 	// Configure tool-specific properties.
 	// "customizations": {},

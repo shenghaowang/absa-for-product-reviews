@@ -10,6 +10,7 @@ class Predictor:
     of sentiment classification
     """
 
+    @staticmethod
     def get_majority_prediction(
         y_true: np.array, num_aspects: int, absent: int = 0
     ) -> np.array:
@@ -44,6 +45,7 @@ class Predictor:
 
         return np.vstack(y_majority_pred).T
 
+    @staticmethod
     def compute_accuracy(
         y_true: np.array, y_pred: np.array, aspects: List[str], absent: int = 0
     ) -> None:

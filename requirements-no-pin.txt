@@ -11,3 +11,4 @@ scikit-multilearn
 pyarrow
 cleantext
 pre-commit
+pytest

@@ -77,6 +77,7 @@ def trainer(
     model = ABSAClassifier(
         model,
         aspects=feature_params.aspects,
+        num_classes=feature_params.num_classes,
         label_encoder=feature_params.label_encoder,
         learning_rate=hyparams.learning_rate,
         class_weights=hyparams.class_weights,

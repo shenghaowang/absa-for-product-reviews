@@ -17,6 +17,7 @@ class ABSAClassifier(pl.LightningModule):
         self,
         model,
         aspects: List[str],
+        num_classes: int,
         label_encoder: Dict[str, int],
         learning_rate: float,
         class_weights: List[float],
@@ -28,7 +29,7 @@ class ABSAClassifier(pl.LightningModule):
         self.num_aspects = len(self.aspects)
         self.learning_rate = learning_rate
         self.class_weights = torch.tensor(class_weights)
-        self.acc = torchmetrics.Accuracy()
+        self.acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
 
     def forward(self, x, x_len):
         return self.model(x, x_len)

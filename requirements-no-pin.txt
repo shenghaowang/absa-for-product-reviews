@@ -1,0 +1,13 @@
+hydra-core
+loguru
+nltk
+numpy
+omegaconf
+pandas
+pytorch-lightning
+spacy
+scikit-learn
+scikit-multilearn
+pyarrow
+cleantext
+pre-commit

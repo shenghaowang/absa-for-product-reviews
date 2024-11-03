@@ -9,7 +9,7 @@ import torchmetrics
 # from loguru import logger
 from omegaconf import DictConfig
 
-from attention import MultiHeadAttention
+from absa.attention import MultiHeadAttention
 
 
 class ABSAClassifier(pl.LightningModule):

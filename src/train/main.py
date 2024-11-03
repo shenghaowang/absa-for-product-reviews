@@ -7,12 +7,12 @@ import torch
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
-from absa_data import ABSADataModule, ABSAVectorizer
-from model import ABSAClassifier, MultiTaskClassificationModel
-from splitter import ABSADataRenderer, ABSADataSplitter
+from absa.model import ABSAClassifier, MultiTaskClassificationModel
+from train.absa_data import ABSADataModule, ABSAVectorizer
+from train.splitter import ABSADataRenderer, ABSADataSplitter
 
 
-@hydra.main(version_base=None, config_path=".", config_name="config")
+@hydra.main(version_base=None, config_path="../config", config_name="config")
 def main(cfg: DictConfig):
     processed_data_dir = cfg.datasets.restaurant_reviews.processed
     aspects = OmegaConf.to_object(cfg.features.aspects)

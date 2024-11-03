@@ -3,8 +3,8 @@ import torch
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
-from absa_data import ABSADataModule, ABSAVectorizer
-from splitter import ABSADataRenderer, ABSADataSplitter
+from train.absa_data import ABSADataModule, ABSAVectorizer
+from train.splitter import ABSADataRenderer, ABSADataSplitter
 
 MAX_EPOCHS = 1
 

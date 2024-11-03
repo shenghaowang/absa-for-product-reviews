@@ -1,11 +1,11 @@
 import hydra
 import torch
 from loguru import logger
+from model.attention import MultiHeadAttention
 from omegaconf import DictConfig, OmegaConf
 
-from absa_data import ABSADataModule, ABSAVectorizer
-from attention import MultiHeadAttention
-from splitter import ABSADataRenderer, ABSADataSplitter
+from train.absa_data import ABSADataModule, ABSAVectorizer
+from train.splitter import ABSADataRenderer, ABSADataSplitter
 
 
 @hydra.main(version_base=None, config_path=".", config_name="config")

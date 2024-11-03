@@ -22,7 +22,7 @@ def scaled_dot_product_attention(
 
 
 class AttentionHead(nn.Module):
-    def __init__(self, embed_dim, head_dim):
+    def __init__(self, embed_dim: int, head_dim: int):
         """Single attention head projects token embeddings
         into query, key, value and generate attention scores.
         Attention heads work in a similar way to the filters
@@ -50,7 +50,7 @@ class AttentionHead(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, embed_dim, num_heads):
+    def __init__(self, embed_dim: int, num_heads: int):
         """Implement multi-head attention layer
 
         Parameters
